@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-web-app-svc
+spec:
+  type: LoadBalancer # Exposes the app to the internet
+  ports:
+  - port: 80
+    targetPort: 80 # Maps container port 80 to public port 80
+  selector:
+    app: my-web-app # Must match the deployment's label

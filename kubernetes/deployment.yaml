@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-web-app
+  labels:
+    app: my-web-app
+spec:
+  replicas: 2 # Deploy 2 instances for resilience
+  selector:
+    matchLabels:
+      app: my-web-app
+  template:
+    metadata:
+      labels:
+        app: my-web-app
+    spec:
+      containers:
+      - name: my-web-app
+        # Placeholder image, will be replaced by Ansible/GitHub Actions
+        image: myprojectacr093db4622ac7c5dd.azurecr.io/my-static-web-app:latest 
+        ports:
+        - containerPort: 80 # Nginx port
