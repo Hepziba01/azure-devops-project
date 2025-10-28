@@ -1,0 +1,31 @@
+---
+- name: Deploy Web App to AKS
+  hosts: localhost
+  connection: local
+  vars:
+    # Variables will be passed by GitHub Actions
+    acr_server: "myprojectacr093db4622ac7c5dd.azurecr.io"
+    image_name: "{{ acr_server }}/my-static-web-app:{{ image_tag }}"
+  tasks:
+    - name: Apply Kubernetes Manifests (Deployment and Service)
+      community.kubernetes.k8s:
+        state: present
+        src: "{{ item }}"
+      loop:
+        - kubernetes/deployment.yaml
+        - kubernetes/service.yaml
+    
+    - name: Update deployment image tag
+      community.kubernetes.k8s:
+        state: present
+        definition:
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: my-web-app
+          spec:
+            template:
+              spec:
+                containers:
+                - name: my-web-app
+                  image: "{{ image_name }}"
