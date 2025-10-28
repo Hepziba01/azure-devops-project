@@ -10,6 +10,7 @@
     - name: Apply Kubernetes Manifests (Deployment and Service)
       community.kubernetes.k8s:
         state: present
+        namespace: default # <-- FIX 1: Explicitly set namespace for creation
         src: "{{ item }}"
       loop:
         - kubernetes/deployment.yaml
@@ -18,6 +19,7 @@
     - name: Update deployment image tag
       community.kubernetes.k8s:
         state: present
+        namespace: default # <-- FIX 2: Explicitly set namespace for update
         definition:
           apiVersion: apps/v1
           kind: Deployment
