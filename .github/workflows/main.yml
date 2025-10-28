@@ -39,21 +39,33 @@ jobs:
           docker build -t ${{ env.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${IMAGE_TAG} .
           docker push ${{ env.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${IMAGE_TAG}
           echo "IMAGE_TAG=${IMAGE_TAG}" >> $GITHUB_ENV # Pass the image tag to the next step
-
-      # 2. DEPLOY STAGE: Deploy to AKS using Containerized Ansible
+        # 2. DEPLOY STAGE: Deploy to AKS using Runner-installed Ansible
       - name: Set AKS context for kubectl
         uses: azure/aks-set-context@v3
         with:
           cluster-name: ${{ env.CLUSTER_NAME }}
           resource-group: ${{ env.RESOURCE_GROUP }}
           
+      - name: Install Ansible and Dependencies
+        run: |
+          # Install Ansible and Python Kubernetes library directly into the runner environment
+          pip install ansible kubernetes
+          ansible-galaxy collection install community.kubernetes
+          
       - name: Run Ansible Playbook for Deployment
-        # Uses the certified Ansible Docker image to bypass local installation issues
-        uses: docker://ansible/ansible:latest 
-        with:
-          args: ansible-playbook deploy-aks.yaml -e image_tag=${{ env.IMAGE_TAG }}
-        env:
-          KUBECONFIG: /home/runner/.kube/config # Passes K8s auth config to the Ansible container
+        run: |
+          # Execute Ansible, which now has access to the KUBECONFIG file from the runner's environment
+          ansible-playbook deploy-aks.yaml --extra-vars "image_tag=${{ env.IMAGE_TAG }}"
+
+      # 3. VERIFICATION STAGE
+      - name: Deployment Validation and Status Checks
+        run: |
+          echo "Checking deployment status..."
+          kubectl rollout status deployment/my-web-app --timeout=300s
+          echo "Deployment successful. Getting service IP."
+          kubectl get svc my-web-app-svc
+
+    
 
       # 3. VERIFICATION STAGE
       - name: Deployment Validation and Status Checks
