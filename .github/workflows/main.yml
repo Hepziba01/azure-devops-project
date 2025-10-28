@@ -57,15 +57,7 @@ jobs:
           # Execute Ansible, which now has access to the KUBECONFIG file from the runner's environment
           ansible-playbook deploy-aks.yaml --extra-vars "image_tag=${{ env.IMAGE_TAG }}"
 
-      # 3. VERIFICATION STAGE
-      - name: Deployment Validation and Status Checks
-        run: |
-          echo "Checking deployment status..."
-          kubectl rollout status deployment/my-web-app --timeout=300s
-          echo "Deployment successful. Getting service IP."
-          kubectl get svc my-web-app-svc
 
-    
 
       # 3. VERIFICATION STAGE
       - name: Deployment Validation and Status Checks
