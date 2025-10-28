@@ -1,0 +1,66 @@
+name: CI/CD Pipeline to AKS (Final Project)
+
+on:
+  push:
+    branches:
+      - develop # Triggers the pipeline on push to the develop branch
+
+env:
+  ACR_LOGIN_SERVER: ${{ secrets.ACR_LOGIN_SERVER }}
+  RESOURCE_GROUP: ${{ secrets.AKS_RESOURCE_GROUP }}
+  CLUSTER_NAME: ${{ secrets.AKS_CLUSTER_NAME }}
+  IMAGE_NAME: my-static-web-app 
+
+jobs:
+  build_and_deploy:
+    name: Build, Push, and Deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      # 1. BUILD STAGE: Authenticate and Build/Push Docker Image
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Log in to ACR
+        uses: azure/docker-login@v1
+        with:
+          login-server: ${{ env.ACR_LOGIN_SERVER }}
+          username: ${{ fromJson(secrets.AZURE_CREDENTIALS).clientId }}
+          password: ${{ fromJson(secrets.AZURE_CREDENTIALS).clientSecret }}
+
+      - name: Build and push Docker image
+        id: build-image
+        run: |
+          IMAGE_TAG=${{ github.sha }} # Use Git commit SHA for unique versioning
+          docker build -t ${{ env.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${IMAGE_TAG} .
+          docker push ${{ env.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${IMAGE_TAG}
+          echo "IMAGE_TAG=${IMAGE_TAG}" >> $GITHUB_ENV # Pass the image tag to the next step
+
+      # 2. DEPLOY STAGE: Deploy to AKS using Containerized Ansible
+      - name: Set AKS context for kubectl
+        uses: azure/aks-set-context@v3
+        with:
+          cluster-name: ${{ env.CLUSTER_NAME }}
+          resource-group: ${{ env.RESOURCE_GROUP }}
+          
+      - name: Run Ansible Playbook for Deployment
+        # Uses the certified Ansible Docker image to bypass local installation issues
+        uses: docker://ansible/ansible:latest 
+        with:
+          args: ansible-playbook deploy-aks.yaml -e image_tag=${{ env.IMAGE_TAG }}
+        env:
+          KUBECONFIG: /home/runner/.kube/config # Passes K8s auth config to the Ansible container
+
+      # 3. VERIFICATION STAGE
+      - name: Deployment Validation and Status Checks
+        run: |
+          echo "Checking deployment status..."
+          # Waits for the rollout to successfully complete on the cluster
+          kubectl rollout status deployment/my-web-app --timeout=300s
+          echo "Deployment successful. Getting service IP."
+          # Displays the LoadBalancer IP, which is needed for Phase 6 validation
+          kubectl get svc my-web-app-svc
