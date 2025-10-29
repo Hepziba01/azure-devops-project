@@ -1,0 +1,50 @@
+# Ignore Terraform local files
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraform.lock.hcl
+
+# Ignore local environment and secret files
+*.env
+*.tfvars
+*.tfvars.json
+
+# Ignore build artifacts and dependencies
+node_modules/
+dist/
+build/
+bin/
+obj/
+__pycache__/
+*.pyc
+
+# Ignore Docker files and local images
+*.tar
+*.img
+*.log
+
+# Ignore VSCode, IDE, and system files
+.vscode/
+.idea/
+*.DS_Store
+Thumbs.db
+
+# Ignore temporary files
+*.tmp
+*.bak
+
+# Ignore executables and binaries
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Ignore Azure DevOps and CI/CD generated files
+*.zip
+*.tar.gz
+*.tgz
