@@ -64,7 +64,7 @@ jobs:
         run: |
           echo "Checking deployment status..."
           # Waits for the rollout to successfully complete on the cluster
-          kubectl rollout status deployment/my-web-app --timeout=300s
+          kubectl rollout status deployment/my-web-app --timeout=1000s
           echo "Deployment successful. Getting service IP."
           # Displays the LoadBalancer IP, which is needed for Phase 6 validation
           kubectl get svc my-web-app-svc
