@@ -3,7 +3,8 @@ name: CI/CD Pipeline to AKS (Final Project)
 on:
   push:
     branches:
-      - develop # Triggers the pipeline on push to the develop branch
+      - develop 
+      - main # Triggers the pipeline on push to the develop branch
 
 env:
   ACR_LOGIN_SERVER: ${{ secrets.ACR_LOGIN_SERVER }}
