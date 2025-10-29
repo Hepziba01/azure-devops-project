@@ -8,6 +8,10 @@ override.tf.json
 *_override.tf
 *_override.tf.json
 .terraform.lock.hcl
+*.exe
+*.zip
+*.tar.gz
+*.log
 
 # Ignore local environment and secret files
 *.env
